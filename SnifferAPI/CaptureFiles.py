@@ -13,7 +13,7 @@ SNAPLEN                     = 0xFFFF
 NETWORK                     = LINKTYPE_NORDIC_BLE
 
 
-globalHeaderString = [    
+globalHeaderString = [
                             ((MAGIC_NUMBER     >> 0) & 0xFF),
                             ((MAGIC_NUMBER     >> 8) & 0xFF),
                             ((MAGIC_NUMBER     >> 16) & 0xFF),
@@ -40,7 +40,8 @@ globalHeaderString = [
                             ((NETWORK          >> 24) & 0xFF)
                         ]
 
-captureFilePath = os.path.join(Logger.logFilePath, "capture.pcap")
+time_stamp = time.strftime("%Y%m%d-%H%M%S")
+captureFilePath = os.path.join(Logger.logFilePath, "capture_{}.pcap".format(time_stamp))
 
 class CaptureFileHandler:
     def __init__(self, clear = False):
@@ -50,14 +51,14 @@ class CaptureFileHandler:
             self.startNewFile()
         elif os.path.getsize(self.filename) > 20000000:
             self.doRollover()
-        if clear: 
+        if clear:
             #clear file
             self.startNewFile()
-    
+
     def startNewFile(self):
         with open(self.filename, "wb") as f:
             f.write(toString(globalHeaderString))
-    
+
     def doRollover(self):
         try:
             os.remove(self.backupFilename)
@@ -68,37 +69,37 @@ class CaptureFileHandler:
             self.startNewFile()
         except:
             logging.exception("capture file rollover failed")
-    
+
     def readLine(self, lineNum):
         line = ""
         with open(self.filename, "r") as f:
             f.seek(lineNum)
             line = f.readline()
         return line
-        
+
     def readAll(self):
         text = ""
         with open(self.filename, "r") as f:
             text = f.read()
         return text
-        
+
     def writeString(self, msgString):
         with open(self.filename, "ab") as f:
             f.write(msgString)
-            
+
     def writeList(self, msgList):
         self.writeString(toString(msgList))
-        
+
     def writePacketList(self, packetList):
         self.writeList(self.makePacketHeader(len(packetList)) + packetList)
-        
+
     def writePacket(self, packet):
         self.writePacketList([packet.boardId] + packet.getList())
-                
+
     def makePacketHeader(self, length):
-        
+
         timeNow = time.time()
-        
+
         TS_SEC         = int(timeNow)
         TS_USEC     = int((timeNow-TS_SEC)*1000000)
         INCL_LENGTH = length
@@ -123,8 +124,8 @@ class CaptureFileHandler:
                             ((ORIG_LENGTH     >> 24) & 0xFF)
                         ]
         return headerString
-        
-        
+
+
 def toString(myList):
     myString = ""
     for i in myList:
@@ -136,7 +137,7 @@ def toString(myList):
             logging.exception("byte: %d, list: %s" % (i, str(myList)))
             raise
     return myString
-        
+
 def toList(myString):
     myList = []
     for c in myString:
